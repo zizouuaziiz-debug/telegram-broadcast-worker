@@ -110,14 +110,14 @@ export class BroadcastWorker {
         for (const user of users) {
           const ok = await this.sendWithRetry(broadcast, user.telegram_id);
 
-          if (ok) {
-            await this.supabase.insertSent(broadcast.id, user.telegram_id);
-            batchSuccess++;
-          } else {
-            batchFailed++;
-          }
+if (ok) {
+  await this.supabase.insertSent(broadcast.id, user.telegram_id);
+  batchSuccess++;
+} else {
+  batchFailed++;
+}
 
-          await sleep(REQUEST_DELAY_MS);
+await sleep(REQUEST_DELAY_MS);
         }
 
         // Reload the latest broadcast row to get the accurate failed_count
@@ -215,3 +215,9 @@ return {
   success: false,
   permanent: true,
 };
+    return {
+  success: false,
+  permanent: true,
+};
+  }
+    }
