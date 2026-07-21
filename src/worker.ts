@@ -164,41 +164,54 @@ export class BroadcastWorker {
    * - Permanent errors (400, 403, 404): skip immediately.
    */
   private async sendWithRetry(
-    broadcast: BroadcastLog,
-    telegramId: string
-  ): Promise<boolean> {
+  broadcast: BroadcastLog,
+  telegramId: string
+): Promise<{
+  success: boolean;
+  permanent: boolean;
+}> {
     const result = await this.telegram.send(
-      telegramId,
-      broadcast.message,
-      broadcast.image_url
-    );
+  telegramId,
+  broadcast.message,
+  broadcast.image_url
+);
 
-    if (result.success) return true;
-
-    // Temporary error — wait then retry once.
-    if (result.temporary) {
-      const waitMs =
-        result.retryAfter !== undefined
-          ? result.retryAfter * 1000
-          : TEMP_ERROR_RETRY_DELAY_MS;
-
-      if (result.retryAfter !== undefined) {
-        console.log(`Rate limited. Retrying after ${result.retryAfter}s...`);
-      } else {
-        console.log(`Temporary error. Retrying after ${waitMs}ms...`);
-      }
-
-      await sleep(waitMs);
-
-      const retry = await this.telegram.send(
-        telegramId,
-        broadcast.message,
-        broadcast.image_url
-      );
-      return retry.success;
-    }
-
-    // Permanent error — skip this user, increment failed_count in the caller.
-    return false;
-  }
+if (result.success) {
+  return {
+    success: true,
+    permanent: false,
+  };
 }
+
+// Temporary error → retry once
+if (result.temporary) {
+  const waitMs =
+    result.retryAfter !== undefined
+      ? result.retryAfter * 1000
+      : TEMP_ERROR_RETRY_DELAY_MS;
+
+  if (result.retryAfter !== undefined) {
+    console.log(`Rate limited. Retrying after ${result.retryAfter}s...`);
+  } else {
+    console.log(`Temporary error. Retrying after ${waitMs}ms...`);
+  }
+
+  await sleep(waitMs);
+
+  const retry = await this.telegram.send(
+    telegramId,
+    broadcast.message,
+    broadcast.image_url
+  );
+
+  return {
+    success: retry.success,
+    permanent: !!retry.permanent,
+  };
+}
+
+// Permanent error
+return {
+  success: false,
+  permanent: true,
+};
