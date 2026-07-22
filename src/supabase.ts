@@ -149,15 +149,31 @@ export class SupabaseService {
     );
 
     // 4 & 5. Filter and return first `limit` pending users
-    const pending: User[] = [];
-    for (const user of users as User[]) {
-      if (!sentSet.has(user.telegram_id)) {
-        pending.push(user);
-        if (pending.length >= limit) break;
-      }
     }
+const pending: User[] = [];
 
-    return pending;
+for (const user of users as User[]) {
+  if (!sentSet.has(user.telegram_id)) {
+    pending.push(user);
+
+    if (pending.length >= limit) {
+      break;
+    }
+  } 
+}
+            
+// أضف هذا
+console.log("==================================");
+console.log("Active users:", users.length);
+console.log("Already sent:", sentSet.size);
+console.log("Pending users:", pending.length);
+
+if (pending.length > 0) {
+  console.log("First pending:", pending[0].telegram_id);
+}
+console.log("==================================");
+
+return pending;
   }
 
   /**
