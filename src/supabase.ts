@@ -149,7 +149,7 @@ export class SupabaseService {
     );
 
     // 4 & 5. Filter and return first `limit` pending users
-    }
+    
 const pending: User[] = [];
 
 for (const user of users as User[]) {
